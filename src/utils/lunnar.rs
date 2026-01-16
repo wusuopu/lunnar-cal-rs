@@ -36,10 +36,16 @@ const SOLAR_TERM_COEFFICIENT: [f64; 24] = [
 impl LunnarDate {
     pub fn from(date: &Date) -> std::result::Result<Self, Error> {
         let mut solar_term = Self::get_solar_term(date);
-        let lunisolar_date = LunisolarDate::from_solar_date(SolarDate::from_ymd(date.year() as u16, date.month() as u8, date.day()).unwrap()).unwrap();
 
-        if lunisolar_date.to_lunar_month() == LunarMonth::First && lunisolar_date.to_lunar_day() == LunarDay::First {
-            solar_term = "春节".into();
+        let solar_date = SolarDate::from_ymd(date.year() as u16, date.month() as u8, date.day()).map_err(|_| Error{message: "日期无效".to_string()});
+        let lunisolar_date = LunisolarDate::from_solar_date(solar_date.unwrap()).unwrap();
+
+        if lunisolar_date.to_lunar_day() == LunarDay::First {
+            if lunisolar_date.to_lunar_month() == LunarMonth::First {
+                solar_term = "春节".into();
+            } else {
+                solar_term = format!("{}", lunisolar_date.to_lunar_month());
+            }
         }
 
         Ok(LunnarDate {

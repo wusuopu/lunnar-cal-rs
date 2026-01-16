@@ -1,14 +1,73 @@
-use ratatui::layout::{Constraint, Layout, Margin, Rect};
-use ratatui::style::{Color, Modifier, Style, Stylize};
+use std::collections::HashMap;
+use std::sync::OnceLock;
+
+use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::style::{Color, Style, Stylize};
 use ratatui::text::{Line, Text, Span};
-use ratatui::widgets::calendar::{CalendarEventStore, DateStyler, Monthly};
+use ratatui::widgets::calendar::{CalendarEventStore, DateStyler};
 use ratatui::{Frame};
-use time::{Date, Month, OffsetDateTime};
+use time::{Date, Month};
 
 pub const HOLIDAY_COLOR: Color = Color::Red;
 pub const WORKDAY_COLOR: Color = Color::LightMagenta;
 pub const TODAY_COLOR: Color = Color::LightBlue;
 pub const SEASON_COLOR: Color = Color::Green;
+
+pub fn holiday_2026() -> &'static std::sync::Mutex<HashMap<String, Style>> {
+    static GLOBAL_MAP: OnceLock<std::sync::Mutex<HashMap<String, Style>>> = OnceLock::new();
+    GLOBAL_MAP.get_or_init(|| {
+        let mut hash = HashMap::new();
+        let holiday_style = Style::default().bg(HOLIDAY_COLOR);
+        let workday_style = Style::default().bg(WORKDAY_COLOR);
+        hash.insert("2026-01-01".to_string(), holiday_style.clone());
+        hash.insert("2026-01-02".to_string(), holiday_style.clone());
+        hash.insert("2026-01-03".to_string(), holiday_style.clone());
+        hash.insert("2026-01-04".to_string(), workday_style.clone());
+
+        hash.insert("2026-02-14".to_string(), workday_style.clone());
+        hash.insert("2026-02-15".to_string(), holiday_style.clone());
+        hash.insert("2026-02-16".to_string(), holiday_style.clone());
+        hash.insert("2026-02-17".to_string(), holiday_style.clone());
+        hash.insert("2026-02-18".to_string(), holiday_style.clone());
+        hash.insert("2026-02-19".to_string(), holiday_style.clone());
+        hash.insert("2026-02-20".to_string(), holiday_style.clone());
+        hash.insert("2026-02-21".to_string(), holiday_style.clone());
+        hash.insert("2026-02-22".to_string(), holiday_style.clone());
+        hash.insert("2026-02-23".to_string(), holiday_style.clone());
+        hash.insert("2026-02-28".to_string(), workday_style.clone());
+
+        hash.insert("2026-04-04".to_string(), holiday_style.clone());
+        hash.insert("2026-04-05".to_string(), holiday_style.clone());
+        hash.insert("2026-04-06".to_string(), holiday_style.clone());
+
+        hash.insert("2026-05-01".to_string(), holiday_style.clone());
+        hash.insert("2026-05-02".to_string(), holiday_style.clone());
+        hash.insert("2026-05-03".to_string(), holiday_style.clone());
+        hash.insert("2026-05-04".to_string(), holiday_style.clone());
+        hash.insert("2026-05-05".to_string(), holiday_style.clone());
+        hash.insert("2026-05-09".to_string(), workday_style.clone());
+
+        hash.insert("2026-06-19".to_string(), holiday_style.clone());
+        hash.insert("2026-06-20".to_string(), holiday_style.clone());
+        hash.insert("2026-06-21".to_string(), holiday_style.clone());
+
+        hash.insert("2026-09-20".to_string(), workday_style.clone());
+        hash.insert("2026-09-25".to_string(), holiday_style.clone());
+        hash.insert("2026-09-26".to_string(), holiday_style.clone());
+        hash.insert("2026-09-27".to_string(), holiday_style.clone());
+
+        hash.insert("2026-10-01".to_string(), holiday_style.clone());
+        hash.insert("2026-10-02".to_string(), holiday_style.clone());
+        hash.insert("2026-10-03".to_string(), holiday_style.clone());
+        hash.insert("2026-10-04".to_string(), holiday_style.clone());
+        hash.insert("2026-10-05".to_string(), holiday_style.clone());
+        hash.insert("2026-10-06".to_string(), holiday_style.clone());
+        hash.insert("2026-10-07".to_string(), holiday_style.clone());
+        hash.insert("2026-10-10".to_string(), workday_style.clone());
+
+        std::sync::Mutex::new(hash)
+    })
+}
 
 pub struct MonthDrawer {
     pub year: i32,
@@ -84,7 +143,7 @@ impl MonthDrawer {
         frame.render_widget(header.centered(), area);
     }
 
-    fn build_day_span(&self, day: &Date, events: &CalendarEventStore, is_lunar: bool) -> Span {
+    fn build_day_span(&self, day: &Date, events: &CalendarEventStore, is_lunar: bool) -> Span<'_> {
         let mut style = events.get_style(day.clone());
         if style.fg.is_none() {
             if is_lunar {

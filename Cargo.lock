@@ -200,6 +200,7 @@ dependencies = [
  "crossterm",
  "ratatui",
  "time",
+ "time-macros",
 ]
 
 [[package]]

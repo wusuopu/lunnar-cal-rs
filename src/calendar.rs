@@ -7,21 +7,39 @@ use ratatui::widgets::calendar::{CalendarEventStore};
 use ratatui::{DefaultTerminal, Frame};
 use time::ext::NumericalDuration;
 use time::{Date, Month, OffsetDateTime};
+use time_macros;
 
 // 日历
 pub struct Calendar {
-
+    events: Option<CalendarEventStore>,
 }
 
 impl Calendar {
     pub fn new() -> Self {
         Calendar {
-
+            events: None,
         }
     }
 
-    pub fn run(self, mut terminal: DefaultTerminal) -> Result<()> {
+    pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         let mut selected_date = OffsetDateTime::now_local()?.date();
+
+        let mut event_list = CalendarEventStore::today(
+            Style::default()
+            .add_modifier(Modifier::UNDERLINED)
+        );
+        for (key, s) in crate::render::month::holiday_2026().lock().unwrap().iter() {
+            // event_list.add(
+            //     Date::parse("2026-02-16", time_macros::format_description!("[year]-[month]-[day]")).unwrap(),
+            //     Style::default().bg(crate::render::month::SEASON_COLOR)
+            // );
+            event_list.add(
+                Date::parse(key, time_macros::format_description!("[year]-[month]-[day]")).unwrap(),
+                *s
+            );
+        }
+        self.events = Some(event_list);
+
         loop {
             terminal.draw(|frame| self.render(frame, selected_date))?;
             if let Some(key) = event::read()?.as_key_press_event() {
@@ -79,17 +97,23 @@ impl Calendar {
     }
 
     fn render(&self, frame: &mut Frame, selected_date: Date) {
+        let lunnar_date = crate::utils::lunnar::LunnarDate::from(&selected_date).unwrap();
+
         let header = Text::from_iter([
             Line::from("中华万年历".bold()),
             Line::from("<q> 退出 | <n> 下个月, <p> 上个月 | <PageDown> 下一年, <PageUp> 上一年"),
-            Line::from("<hjkl←↓↑→> 移动选择日期 | <t> 跳转到今日"),
             Line::from_iter([
-                Span::raw("当前日期："),
-                Span::styled(format!("{}", selected_date), Style::default().fg(Color::Yellow)),
+                Span::raw("<hjkl←↓↑→> 移动选择日期 | <t> 跳转到今日"),
                 Span::raw(" | 日期颜色："),
                 Span::styled("放假", Style::default().bg(crate::render::month::HOLIDAY_COLOR)),
                 Span::styled("加班", Style::default().bg(crate::render::month::WORKDAY_COLOR)),
                 Span::styled("今天", Style::default().bg(crate::render::month::TODAY_COLOR)),
+            ]),
+            Line::from_iter([
+                Span::raw("当前日期："),
+                Span::styled(format!("{}", selected_date), Style::default().fg(Color::Yellow)),
+                Span::raw(" 农历："),
+                Span::styled(format!("{}{}", lunnar_date.month, lunnar_date.day), Style::default().fg(Color::Yellow)),
             ]),
         ]);
 
@@ -100,11 +124,7 @@ impl Calendar {
 
         frame.render_widget(header.centered(), text_area);
 
-
-        let mut event_list = CalendarEventStore::today(
-            Style::default()
-            .add_modifier(Modifier::UNDERLINED)
-        );
+        let mut event_list = self.events.clone().unwrap();
         event_list.add(selected_date, Style::default().bg(crate::render::month::TODAY_COLOR));
         // 显示月份
         let month_line_blocks: [Rect; 3] = area.layout(&Layout::vertical([
