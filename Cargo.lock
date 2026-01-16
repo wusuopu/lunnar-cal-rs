@@ -192,18 +192,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cn-cal"
-version = "0.1.0"
-dependencies = [
- "chinese-lunisolar-calendar",
- "color-eyre",
- "crossterm",
- "ratatui",
- "time",
- "time-macros",
-]
-
-[[package]]
 name = "color-eyre"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -739,6 +727,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a1dc47f592c06f33f8e3aea9591776ec7c9f9e4124778ff8a3c3b87159f7e593"
 dependencies = [
  "hashbrown",
+]
+
+[[package]]
+name = "lunnar-cal"
+version = "0.1.0"
+dependencies = [
+ "chinese-lunisolar-calendar",
+ "color-eyre",
+ "crossterm",
+ "ratatui",
+ "time",
+ "time-macros",
 ]
 
 [[package]]
