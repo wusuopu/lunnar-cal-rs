@@ -62,23 +62,17 @@ impl Calendar {
 
     fn next_month(&self, date: Date) -> Date {
         if date.month() == Month::December {
-            date.replace_month(Month::January)
-                .unwrap()
-                .replace_year(date.year() + 1)
-                .unwrap()
+            self.replace_date(date.year() + 1, Month::January, date.day())
         } else {
-            date.replace_month(date.month().next()).unwrap()
+            self.replace_date(date.year(), date.month().next(), date.day())
         }
     }
 
     fn prev_month(&self, date: Date) -> Date {
         if date.month() == Month::January {
-            date.replace_month(Month::December)
-                .unwrap()
-                .replace_year(date.year() - 1)
-                .unwrap()
+            self.replace_date(date.year() - 1, Month::December, date.day())
         } else {
-            date.replace_month(date.month().previous()).unwrap()
+            self.replace_date(date.year(), date.month().previous(), date.day())
         }
     }
     fn next_year(&self, date: Date) -> Date {
@@ -86,15 +80,24 @@ impl Calendar {
         if date.year() >= 2100 {
             return date;
         }
-        date.replace_year(date.year() + 1).unwrap()
+        self.replace_date(date.year() + 1, date.month(), date.day())
     }
     fn prev_year(&self, date: Date) -> Date {
         // 最小只能显示到 1900 年
         if date.year() <= 1900 {
             return date;
         }
-        date.replace_year(date.year() - 1).unwrap()
+        self.replace_date(date.year() - 1, date.month(), date.day())
     }
+    fn replace_date(&self, year: i32, month: Month, day: u8) -> Date {
+        let day = if day > month.length(year) {
+            month.length(year)
+        } else {
+            day
+        };
+        Date::from_calendar_date(year, month, day).unwrap()
+    }
+
 
     fn render(&self, frame: &mut Frame, selected_date: Date) {
         let lunnar_date = crate::utils::lunnar::LunnarDate::from(&selected_date).unwrap();
